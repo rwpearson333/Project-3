@@ -2,7 +2,7 @@ import time
 import brickpi3
 from grovepi import *
 import math as m
-
+#test elijah
 BP = brickpi3.BrickPi3()
 
 LIGHT_SENSOR = BP.PORT_2
@@ -29,7 +29,3 @@ while value:
     print("Color:", color)
     print("Distnace:", distance)
     time.sleep(0.2)
-
-
-
-
