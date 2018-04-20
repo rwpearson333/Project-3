@@ -4,7 +4,7 @@ from grovepi import *
 import math as m
 
 BP = brickpi3.BrickPi3()
-
+#test
 #define PID gain constants
 DK_CONSTANT = 0.1
 IK_CONSTANT = 1
@@ -50,12 +50,12 @@ while value:
         distance = ultrasonicRead(ULTRASONIC)
         if left:
             BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED * dK + iK)
-            BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED) 
+            BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
         elif right:
             BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED)
             BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED * dK + iK)
 
-        if not left and not right:         
+        if not left and not right:
             if distance <= 7.5:
                 d = abs(distanceLast - distance) / 0.05
                 iK = distance * IK_CONSTANT
@@ -73,6 +73,5 @@ while value:
             else:
                 BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED)
                 BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
-                
+
     count = count + 1
-    
