@@ -12,7 +12,7 @@ mapArray = [[0] * (X_SIZE - 1) for y in range(Y_SIZE - 1)]
 mapFile = open('map.csv', 'w')
 
 def updateMap(x, y, type):
-    mapArray[y][x] = type
+    mapArray[(Y_SIZE - 2) - y][x] = type
     for y in range(0, Y_SIZE - 1):
         for x in range(0, X_SIZE - 1):
             mapFile.write(str(mapArray[y][x]))
