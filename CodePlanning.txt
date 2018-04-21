@@ -3,7 +3,7 @@ Tasks, who is working on it, status
 1. Wall Following         , NA, Done
 2. Ultrasonic check LRC   , NA, Done
 3. Scan for resources     , NA, NOT STARTED
-4. Update Map             , Both of us, WIP
+4. Update Map             , Both of us, Done
 5. Send data to user      , NA, NOT STARTED
 6. Check for unmapped path, NA, NOT STARTED
 etc, list person and name
