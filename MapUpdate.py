@@ -1,34 +1,28 @@
 #Team 36 map updating function file
-import grovepi
-import brickpi3
+#import grovepi
+#import brickpi3
 import time
 import math as m
 
-BUTTON = BP.PORT_1
-ULTRASONIC = 7
-
-#define motor ports
-LEFT_MOTOR = BP.PORT_C #Left motor port
-RIGHT_MOTOR = BP.PORT_B #Right motor port
-
-#initialize sensors
-BP.set_sensor_type(LIGHT_SENSOR, BP.SENSOR_TYPE.NXT_LIGHT_ON)
-BP.set_sensor_type(BP.PORT_1, BP.SENSOR_TYPE.TOUCH)
-
-#Set initial motor speeds to zero
-BP.set_motor_dps(RIGHT_MOTOR, 0)
-BP.set_motor_dps(LEFT_MOTOR, 0)
-BP.set_motor_dps(BP.PORT_D, 0)
-BP.set_motor_limits(LEFT_MOTOR, 70, 250)
-BP.set_motor_limits(RIGHT_MOTOR, 70, 250)
+X_SIZE = 6
+Y_SIZE = 7
 
 #UpdateMap required initialization statements
-map = [[0 for x in range(5)] 0 for y in range(6)]
+mapArray = [[0] * (X_SIZE - 1) for y in range(Y_SIZE - 1)]
 mapFile = open('map.csv', 'w')
-updateMap(0, 0, 0)
-mapFile.close()
 
 def updateMap(x, y, type):
-    map[x][y] = type
-    mapFile.write(map)
+    mapArray[y][x] = type
+    for y in range(0, Y_SIZE - 1):
+        for x in range(0, X_SIZE - 1):
+            mapFile.write(str(mapArray[y][x]))
+            if (x != X_SIZE - 2):
+                mapFile.write(',')
+        mapFile.write('\n')
+    mapFile.seek(0)
     return()
+
+updateMap(0, 0, 3)
+updateMap(2, 4,-1)
+mapFile.close()
+print("reeeee")
