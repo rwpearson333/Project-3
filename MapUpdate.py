@@ -6,10 +6,18 @@ import math as m
 
 X_SIZE = 6
 Y_SIZE = 7
+origX = 2
+origY = 0
+mapNum = 0
 
 #UpdateMap required initialization statements
 mapArray = [[0] * (X_SIZE - 1) for y in range(Y_SIZE - 1)]
 mapFile = open('map.csv', 'w')
+
+#Basic team info
+mapFile.write('Team: 36\nMap: {}\nUnit Length: 35\nOrigin: ({},{})'\
+    .format(mapNum, origX, origY))
+mapFile.write('\nNotes: No\n')
 
 def updateMap(x, y, type):
     mapArray[(Y_SIZE - 2) - y][x] = type
@@ -19,7 +27,7 @@ def updateMap(x, y, type):
             if (x != X_SIZE - 2):
                 mapFile.write(',')
         mapFile.write('\n')
-    mapFile.seek(0)
+    mapFile.seek(61)
     return()
 
 updateMap(0, 0, 3)
