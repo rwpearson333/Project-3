@@ -45,7 +45,6 @@ TURN_AMOUNT = 260
 TURN_ADJUST = 180
 
 #get initial values
-timeInitial = time.time()
 INITIAL_ENCODER = BP.get_motor_encoder(ULTRASONIC_MOTOR)
 WHEEL_DIAMETER = 6.3 #cm
 
@@ -77,7 +76,7 @@ def updateMap(x, y, type):
             if (x != X_SIZE - 2):
                 mapFile.write(',')
         mapFile.write('\n')
-    mapFile.seek(61)
+    mapFile.seek(56)
     return()
 
 def leftWallFollow(distance, distanceLast):
@@ -196,8 +195,7 @@ def chooseTurn(left, right, front, heading):
             heading = 1
         else:
             heading = heading + 1
-
-        time.sleep(5)
+    return heading
 
 
 
@@ -214,6 +212,7 @@ while value:
             BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
             distance = grovepi.ultrasonicRead(ULTRASONIC)
             updateMap(origX, origY, 10)
+            timeInitial = time.time()
             count = count + 1
         if (int(time.time() * 100) % TIME_STEP ==  0):
             distanceLast = distance
@@ -233,9 +232,20 @@ while value:
                 frontDist = ultraForward()
                 rightDist = ultraRight()
                 leftDist = ultraLeft()
-                chooseTurn(leftDist, rightDist, frontDist, heading)
+                heading = chooseTurn(leftDist, rightDist, frontDist, heading)
                 ir = infraRead()
                 mri = magRead()
+        if (BP.get_sensor(BUTTON) and time.time() - timeInitial > 5):
+            #if the button is pressed while running, stop and rest
+            #then break loop and close map file, sleep to restart
+            BP.set_motor_dps(LEFT_MOTOR, 0)
+            BP.set_motor_dps(RIGHT_MOTOR, 0)
+            ultraLeft()
+            mapFile.close()
+            print("reeeee")
+            value = 0
+            time.sleep(2)
+            break
 
             #update map appropriately
             #do the things
@@ -246,8 +256,3 @@ while value:
             #robots rule world
             #I am king
             #kek
-
-
-
-mapFile.close()
-print("reeeee")
