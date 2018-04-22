@@ -1,7 +1,7 @@
 import time
 import math as m
 import brickpi3
-from grovepi import *
+import grovepi
 from IR_Functions import *
 from MPU9250 import MPU9250
 
@@ -14,6 +14,7 @@ PK_CONSTANT = 8
 BASE_SPEED = -180
 TIME_STEP = 20 #ms
 DISTANCE_STEP = 17.5 #cm
+TARGET_DIST = 15
 
 #define sensors
 LIGHT_SENSOR = BP.PORT_1
@@ -23,7 +24,7 @@ IR_setup(grovepi)
 mpu9250 = MPU9250()
 
 #define motor ports
-LEFT_MOTOR = BP.PORT_D #Left motor port
+LEFT_MOTOR = BP.PORT_B #Left motor port
 RIGHT_MOTOR = BP.PORT_C #Right motor port
 ULTRASONIC_MOTOR =  BP.PORT_A
 
@@ -38,6 +39,8 @@ BP.set_motor_dps(LEFT_MOTOR, 0)
 value = 0
 count = 0
 distanceTravelled = 0
+lastLeft = BP.get_motor_encoder(LEFT_MOTOR)
+lastRight = BP.get_motor_encoder(RIGHT_MOTOR)
 
 #get initial values
 timeInitial = time.time()
@@ -81,12 +84,13 @@ def leftWallFollow(distance, distanceLast):
     iK = err * (TIME_STEP / 100.0)
     BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED - pK + dK - iK)
     BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED + pK - dK + iK)
+    print('ELijaaaaaaah')
     return()
 
 def ultraLeft():
     BP.set_motor_position(ULTRASONIC_MOTOR, INITIAL_ENCODER)
     time.sleep(0.5)
-    dist = ultrasonicRead(7)
+    dist = grovepi.ultrasonicRead(ULTRASONIC)
     time.sleep(0.1)
     print("ultraLeft:", dist)
     return dist
@@ -94,7 +98,7 @@ def ultraLeft():
 def ultraForward():
     BP.set_motor_position(ULTRASONIC_MOTOR, INITIAL_ENCODER - 90)
     time.sleep(0.5)
-    dist = ultrasonicRead(7)
+    dist = grovepi.ultrasonicRead(ULTRASONIC)
     time.sleep(0.1)
     print("ultraForward:", dist)
     return dist
@@ -102,7 +106,7 @@ def ultraForward():
 def ultraRight():
     BP.set_motor_position(ULTRASONIC_MOTOR, INITIAL_ENCODER - 180)
     time.sleep(0.5)
-    dist = ultrasonicRead(7)
+    dist = grovepi.ultrasonicRead(ULTRASONIC)
     time.sleep(0.1)
     print("ultraRight:", dist)
 
@@ -139,10 +143,11 @@ while value:
         if count == 0:
             BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED)
             BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
-            distance = ultrasonicRead(ULTRASONIC)
+            distance = grovepi.ultrasonicRead(ULTRASONIC)
         if (int(time.time() * 100) % TIME_STEP ==  0):
             distanceLast = distance
-            distance = ultrasonicRead(ULTRASONIC)
+            distance = grovepi.ultrasonicRead(ULTRASONIC)
+            print(distance)
             if distance < 20:
                 leftWallFollow(distance, distanceLast)
             else:
@@ -151,15 +156,15 @@ while value:
             distanceTemp, lastLeft, lastRight = \
                     checkDist(lastLeft, lastRight)
             distanceTravelled = distanceTravelled + distanceTemp
-            if(distanceTravelled > DISTANCE_STEP):
-                distanceTravelled = 0
-                BP.set_motor_dps(RIGHT_MOTOR, 0)
-                BP.set_motor_dps(LEFT_MOTOR, 0)
-                leftDist = ultraLeft()
-                frontDist = ultraforward()
-                rightDist = ultraRight()
-                ir = infraRead()
-                mri = magRead()
+#            if(distanceTravelled > DISTANCE_STEP):
+#                distanceTravelled = 0
+#                BP.set_motor_dps(RIGHT_MOTOR, 0)
+#                BP.set_motor_dps(LEFT_MOTOR, 0)
+#                frontDist = ultraForward()
+#                rightDist = ultraRight()
+#                leftDist = ultraLeft()
+#                ir = infraRead()
+#                mri = magRead()
 
             #update map appropriately
             #do the things

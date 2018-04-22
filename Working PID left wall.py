@@ -16,7 +16,7 @@ TARGET_DIST = 10
 #define sensors
 LIGHT_SENSOR = BP.PORT_2
 BUTTON = BP.PORT_1
-ULTRASONIC = 0
+ULTRASONIC = 4
 
 #define motor ports
 LEFT_MOTOR = BP.PORT_C #Left motor port
