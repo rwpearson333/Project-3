@@ -84,8 +84,6 @@ def leftWallFollow(distance, distanceLast):
     iK = err * (TIME_STEP / 100.0)
     BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED - pK + dK - iK)
     BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED + pK - dK + iK)
-    print('ELijaaaaaaah')
-    return()
 
 def ultraLeft():
     BP.set_motor_position(ULTRASONIC_MOTOR, INITIAL_ENCODER)
@@ -144,10 +142,11 @@ while value:
             BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED)
             BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
             distance = grovepi.ultrasonicRead(ULTRASONIC)
+            count = count + 1
         if (int(time.time() * 100) % TIME_STEP ==  0):
             distanceLast = distance
             distance = grovepi.ultrasonicRead(ULTRASONIC)
-            print(distance)
+            print("debug", distance)
             if distance < 20:
                 leftWallFollow(distance, distanceLast)
             else:
@@ -156,15 +155,15 @@ while value:
             distanceTemp, lastLeft, lastRight = \
                     checkDist(lastLeft, lastRight)
             distanceTravelled = distanceTravelled + distanceTemp
-#            if(distanceTravelled > DISTANCE_STEP):
-#                distanceTravelled = 0
-#                BP.set_motor_dps(RIGHT_MOTOR, 0)
-#                BP.set_motor_dps(LEFT_MOTOR, 0)
-#                frontDist = ultraForward()
-#                rightDist = ultraRight()
-#                leftDist = ultraLeft()
-#                ir = infraRead()
-#                mri = magRead()
+##            if(distanceTravelled > DISTANCE_STEP):
+##                distanceTravelled = 0
+##                BP.set_motor_dps(RIGHT_MOTOR, 0)
+##                BP.set_motor_dps(LEFT_MOTOR, 0)
+##                frontDist = ultraForward()
+##                rightDist = ultraRight()
+##                leftDist = ultraLeft()
+##                ir = infraRead()
+##                mri = magRead()
 
             #update map appropriately
             #do the things
