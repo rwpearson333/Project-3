@@ -49,10 +49,10 @@ INITIAL_ENCODER = BP.get_motor_encoder(ULTRASONIC_MOTOR)
 WHEEL_DIAMETER = 6.3 #cm
 
 #Map initializations
-X_SIZE = 6
-Y_SIZE = 7
-origX = 2
-origY = 0
+X_SIZE = 100#6
+Y_SIZE = 100#7
+origX = 50#2
+origY = 50#0
 mapNum = 0
 posX = origX
 posY = origY
@@ -198,7 +198,7 @@ def chooseTurn(left, right, front, heading):
         rightTurn = True
         distanceTravelled = -2
     if (left > 25):
-        leftTurn = Trues
+        leftTurn = True
         rightTurn = False
         distanceTravelled = -2
     if (left <= 25 and right <= 25 and front <= 25):
@@ -219,6 +219,15 @@ def chooseTurn(left, right, front, heading):
         else:
             heading = heading + 1
     if (reverse):
+        ultraForward()
+        color = BP.get_sensor(LIGHT_SENSOR)
+        if color > 2550:
+                #blue
+                updateMap(posX, posY, 3)
+        elif color < 2500:
+            #gold
+                updateMap(posX, posY, 2)
+        ultraLeft()
         reverseT()
         heading = heading + 2
         hasReversed = True
@@ -293,14 +302,6 @@ while value:
                         updateMap(posX - 1, posY, 4)
                     else:
                         updateMap(posX, posY + 1)
-                if (reverseBool):
-                    ultraForward()
-                    color = BP.get_sensor(LIGHT_SENSOR)
-                    if color > 2550:
-                        print("ITEM IS BLUE")
-                    elif color < 2500:
-                        print("ITEM IS GOLD")
-                    ultraLeft()
         if (BP.get_sensor(BUTTON) and time.time() - timeInitial > 5):
             #if the button is pressed while running, stop and rest
             #then break loop and close map file, sleep to restart
