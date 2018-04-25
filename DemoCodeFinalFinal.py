@@ -13,8 +13,8 @@ IK_CONSTANT = 2
 PK_CONSTANT = 8
 BASE_SPEED = -180
 TIME_STEP = 20 #ms
-DISTANCE_STEP = 0.97 * 35 #cm
-TARGET_DIST = 12
+DISTANCE_STEP = 0.97 * 40 #cm
+TARGET_DIST = 13
 
 #define sensors
 LIGHT_SENSOR = BP.PORT_1
@@ -41,18 +41,18 @@ count = 0
 distanceTravelled = 0
 lastLeft = abs(BP.get_motor_encoder(LEFT_MOTOR))
 lastRight = abs(BP.get_motor_encoder(RIGHT_MOTOR))
-TURN_AMOUNT = 260
-TURN_ADJUST = 180
+TURN_AMOUNT = 260#Paper260
+TURN_ADJUST = 195
 
 #get initial values
 INITIAL_ENCODER = BP.get_motor_encoder(ULTRASONIC_MOTOR)
 WHEEL_DIAMETER = 6.3 #cm
 
 #Map initializations
-X_SIZE = 6
-Y_SIZE = 7
-origX = 2
-origY = 0
+X_SIZE = 100#6
+Y_SIZE = 100#7
+origX = 50#2
+origY = 50#0
 mapNum = 0
 posX = origX
 posY = origY
@@ -67,6 +67,10 @@ mapFile.write('Team: 36\nMap: {}\nUnit Length: 35\nOrigin: ({},{})'\
     .format(mapNum, origX, origY))
 mapFile.write('\nNotes: No\n')
 
+resourceFile = open('team36_resources.csv', 'w')
+resourceFile.write("Team: 36\nMap: {}\nNotes: Nope\n\nResource Type," \
+    "Parameter of Interest, Parameter,"\
+    "Resource X Coordinate, Resource Y Coordiate" .format(1))
 #Function Defenitions
 def updateMap(x, y, type):
     mapArray[(Y_SIZE - 2) - y][x] = type
@@ -114,8 +118,8 @@ def ultraRight():
     return dist
 
 def infraRead():
-    [val1, val2] = IR_Read(grovepi)
-    return((val1 + val2) / 2)
+#    [val1, val2] = IR_Read(grovepi)
+    return(IR_Read(grovepi))
 
 def magRead():
     mag = mpu9250.readMagnet()
@@ -145,6 +149,7 @@ def turnCW():
     rightEnc = BP.get_motor_encoder(RIGHT_MOTOR)
     BP.set_motor_position(LEFT_MOTOR, leftEnc + TURN_AMOUNT)
     BP.set_motor_position(RIGHT_MOTOR, rightEnc - TURN_AMOUNT)
+    print("turnCW")
     time.sleep(1.25)
 
 def turnCCW():
@@ -157,11 +162,28 @@ def turnCCW():
     rightEnc = BP.get_motor_encoder(RIGHT_MOTOR)
     BP.set_motor_position(LEFT_MOTOR, leftEnc - TURN_AMOUNT)
     BP.set_motor_position(RIGHT_MOTOR, rightEnc + TURN_AMOUNT)
+    print("turnCCW")
+    time.sleep(1.25)
+
+def reverseT():
+    leftEnc = BP.get_motor_encoder(LEFT_MOTOR)
+    rightEnc = BP.get_motor_encoder(RIGHT_MOTOR)
+    BP.set_motor_position(LEFT_MOTOR, leftEnc - TURN_AMOUNT)
+    BP.set_motor_position(RIGHT_MOTOR, rightEnc + TURN_AMOUNT)
+    print("turnCCW")
+    time.sleep(1.25)
+    leftEnc = BP.get_motor_encoder(LEFT_MOTOR)
+    rightEnc = BP.get_motor_encoder(RIGHT_MOTOR)
+    BP.set_motor_position(LEFT_MOTOR, leftEnc - TURN_AMOUNT)
+    BP.set_motor_position(RIGHT_MOTOR, rightEnc + TURN_AMOUNT)
+    print("turnCCW")
     time.sleep(1.25)
 
 def chooseTurn(left, right, front, heading):
     leftTurn = False
     rightTurn = False
+    reverse = False
+    hasReversed = False
     global posY
     global posX
 
@@ -176,13 +198,18 @@ def chooseTurn(left, right, front, heading):
 
     updateMap(posX, posY, 1)
 
+    if (right > 25 and front < 25):
+        rightTurn = True
+        distanceTravelled = -2
     if (left > 25):
         leftTurn = True
+        rightTurn = False
         distanceTravelled = -2
-    if (right > 25):
+    if (left <= 25 and right <= 25 and front <= 25):
         leftTurn = False
-        rightTurn = True
-        distancceTravelled = -2
+        rightTurn = False
+        reverse = True
+
     if (leftTurn):
         turnCCW()
         if (heading == 1):
@@ -195,10 +222,29 @@ def chooseTurn(left, right, front, heading):
             heading = 1
         else:
             heading = heading + 1
-    return heading
+    if (reverse):
+        ultraForward()
+        color = BP.get_sensor(LIGHT_SENSOR)
+        if color > 2550:
+                #blue
+            updateMap(posX, posY, 3)
+            resourceFile.write("\nNon-Hazardous Waste, Mass(g), {}, {} cm, {} cm"
+            .format(0, posX * STEP_SIZE, posY * STEP_SIZE))
+        elif color < 2500:
+            #gold #bio?
+            updateMap(posX, posY, 2)
+            resourceFile.write("\nBiohazard, Mass(g), {}, {} cm, {} cm"
+            .format(0, posX * STEP_SIZE, posY * STEP_SIZE))
+        ultraLeft()
+        reverseT()
+        heading = heading + 2
+        hasReversed = True
+        if (heading > 4):
+            heading = heading - 4
+    return heading, hasReversed
 
-
-
+temp = False
+mri = 0
 #Function Calls
 while not value:
     try:
@@ -217,11 +263,14 @@ while value:
         if (int(time.time() * 100) % TIME_STEP ==  0):
             distanceLast = distance
             distance = grovepi.ultrasonicRead(ULTRASONIC)
-            if distance < 30:
-                leftWallFollow(distance, distanceLast)
+            if distance < 25:
+                if temp:
+                    leftWallFollow(distance, distanceLast)
+                temp = True
             else:
                 BP.set_motor_dps(RIGHT_MOTOR, BASE_SPEED)
                 BP.set_motor_dps(LEFT_MOTOR, BASE_SPEED)
+                temp = False
             distanceTemp, lastLeft, lastRight = \
                     checkDist(lastLeft, lastRight)
             distanceTravelled = distanceTravelled + distanceTemp
@@ -232,9 +281,53 @@ while value:
                 frontDist = ultraForward()
                 rightDist = ultraRight()
                 leftDist = ultraLeft()
-                heading = chooseTurn(leftDist, rightDist, frontDist, heading)
-                ir = infraRead()
+
+                heading, reverseBool = chooseTurn(leftDist, rightDist, frontDist, heading)
+                irLeft, irRight = infraRead()
+                lastMri = mri
                 mri = magRead()
+
+                if (mri > 800 or (mri > 120 and lastMri > 120)):
+                    updateMap(posX * STEP_SIZE, posY * STEP_SIZE, 5)
+                #If both see IR, update ahead, otherwise update appropriate side
+                if (irLeft > 100 and irRight > 100):
+                    updateMap(posX, posY, 4)
+                    resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                     .format(irLeft + irRight / 2, posX * STEP_SIZE, posY * STEP_SIZE))
+                elif (irLeft > 100):
+                    if heading == 1:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, (posX - 1)  * STEP_SIZE, posY * STEP_SIZE))
+                        updateMap(posX - 1, posY, 4)
+                    elif heading == 2:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, posX * STEP_SIZE, (posY + 1)  * STEP_SIZE))
+                        updateMap(posX, posY + 1, 4)
+                    elif heading == 3:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, (posX + 1)  * STEP_SIZE, posY  * STEP_SIZE))
+                        updateMap(posX + 1, posY, 4)
+                    else:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, posX * STEP_SIZE, (posY - 1) * STEP_SIZE))
+                        updateMap(posX, posY - 1)
+                elif (irRight > 100):
+                    if heading == 1:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, (posX + 1) * STEP_SIZE, posY * STEP_SIZE))
+                        updateMap(posX + 1, posY, 4)
+                    elif heading == 2:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, posX * STEP_SIZE, (posY - 1)  * STEP_SIZE))
+                        updateMap(posX, posY - 1, 4)
+                    elif heading == 3:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, (posX - 1)  * STEP_SIZE, posY * STEP_SIZE))
+                        updateMap(posX - 1, posY, 4)
+                    else:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, posX * STEP_SIZE, (posY + 1 * STEP_SIZE))
+                        updateMap(posX, posY + 1, 4)
         if (BP.get_sensor(BUTTON) and time.time() - timeInitial > 5):
             #if the button is pressed while running, stop and rest
             #then break loop and close map file, sleep to restart
@@ -242,17 +335,8 @@ while value:
             BP.set_motor_dps(RIGHT_MOTOR, 0)
             ultraLeft()
             mapFile.close()
+            resourceFile.close()
             print("reeeee")
             value = 0
             time.sleep(2)
             break
-
-            #update map appropriately
-            #do the things
-            #cry
-            #Scan for objects
-            #release biohazard
-            #destroy human kind
-            #robots rule world
-            #I am king
-            #kek

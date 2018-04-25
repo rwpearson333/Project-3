@@ -67,6 +67,10 @@ mapFile.write('Team: 36\nMap: {}\nUnit Length: 35\nOrigin: ({},{})'\
     .format(mapNum, origX, origY))
 mapFile.write('\nNotes: No\n')
 
+resourceFile = open('team36_resources.csv', 'w')
+resourceFile.write("Team: 36\nMap: {}\nNotes: Nope\n\nResource Type," \
+    "Parameter of Interest, Parameter,"\
+    "Resource X Coordinate, Resource Y Coordiate" .format(1))
 #Function Defenitions
 def updateMap(x, y, type):
     mapArray[(Y_SIZE - 2) - y][x] = type
@@ -223,10 +227,14 @@ def chooseTurn(left, right, front, heading):
         color = BP.get_sensor(LIGHT_SENSOR)
         if color > 2550:
                 #blue
-                updateMap(posX, posY, 3)
+            updateMap(posX, posY, 3)
+            resourceFile.write("\nNon-Hazardous Waste, Mass(g), {}, {} cm, {} cm"
+            .format(0, posX * STEP_SIZE, posY * STEP_SIZE))
         elif color < 2500:
-            #gold
-                updateMap(posX, posY, 2)
+            #gold #bio?
+            updateMap(posX, posY, 2)
+            resourceFile.write("\nBiohazard, Mass(g), {}, {} cm, {} cm"
+            .format(0, posX * STEP_SIZE, posY * STEP_SIZE))
         ultraLeft()
         reverseT()
         heading = heading + 2
@@ -280,28 +288,46 @@ while value:
                 mri = magRead()
 
                 if (mri > 800 or (mri > 120 and lastMri > 120)):
-                    updateMap(posX, posY, 5)
+                    updateMap(posX * STEP_SIZE, posY * STEP_SIZE, 5)
                 #If both see IR, update ahead, otherwise update appropriate side
                 if (irLeft > 100 and irRight > 100):
                     updateMap(posX, posY, 4)
+                    resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                     .format(irLeft + irRight / 2, posX * STEP_SIZE, posY * STEP_SIZE))
                 elif (irLeft > 100):
                     if heading == 1:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, (posX - 1)  * STEP_SIZE, posY * STEP_SIZE))
                         updateMap(posX - 1, posY, 4)
                     elif heading == 2:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, posX * STEP_SIZE, (posY + 1)  * STEP_SIZE))
                         updateMap(posX, posY + 1, 4)
                     elif heading == 3:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, (posX + 1)  * STEP_SIZE, posY  * STEP_SIZE))
                         updateMap(posX + 1, posY, 4)
                     else:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irLeft / 2, posX * STEP_SIZE, (posY - 1) * STEP_SIZE))
                         updateMap(posX, posY - 1)
                 elif (irRight > 100):
                     if heading == 1:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, (posX + 1) * STEP_SIZE, posY * STEP_SIZE))
                         updateMap(posX + 1, posY, 4)
                     elif heading == 2:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, posX * STEP_SIZE, (posY - 1)  * STEP_SIZE))
                         updateMap(posX, posY - 1, 4)
                     elif heading == 3:
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, (posX - 1)  * STEP_SIZE, posY * STEP_SIZE))
                         updateMap(posX - 1, posY, 4)
                     else:
-                        updateMap(posX, posY + 1)
+                        resourceFile.write("Cesium - 137, Radiation Stregnth(W), {}, {} cm, {} cm"\
+                         .format(irRight / 2, posX * STEP_SIZE, (posY + 1 * STEP_SIZE))
+                        updateMap(posX, posY + 1, 4)
         if (BP.get_sensor(BUTTON) and time.time() - timeInitial > 5):
             #if the button is pressed while running, stop and rest
             #then break loop and close map file, sleep to restart
